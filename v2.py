@@ -37,6 +37,25 @@ def remove_from_database(ssh_command):
             if ssh_command not in line:
                 f.write(line)
 
+async def capture_ssh_session_line(process):
+    while True:
+        output = await process.stdout.readline()
+        if not output:
+            break
+        output = output.decode('utf-8').strip()
+        if "ssh session:" in output:
+            return output.split("ssh session:")[1].strip()
+    return None
+
+def get_ssh_command_from_database(container_id):
+    if not os.path.exists(database_file):
+        return None
+    with open(database_file, 'r') as f:
+        for line in f:
+            if container_id in line:
+                return line.split('|')[2]
+    return None
+
 def get_user_servers(user):
     if not os.path.exists(database_file):
         return []
@@ -217,27 +236,13 @@ async def create_server_task_debian(interaction):
 
     ssh_session_line = await capture_ssh_session_line(exec_cmd)
     if ssh_session_line:
-        await interaction.user.send(embed=discord.Embed(description=f"### Successfully created Instance\nSSH Session Command: ```{ssh_session_line}```\nOS: Debian 12", color=0x00ff00))
+        await interaction.user.send(embed=discord.Embed(description=f"### Successfully created Instance\nSSH Session Command: ```{ssh_session_line}```\nOS: Ubuntu 22.04", color=0x00ff00))
         add_to_database(user, container_id, ssh_session_line)
         await interaction.followup.send(embed=discord.Embed(description="Instance created successfully. Check your DMs for details.", color=0x00ff00))
     else:
         await interaction.followup.send(embed=discord.Embed(description="Something went wrong or the Instance is taking longer than expected. If this problem continues, Contact Support.", color=0xff0000))
         subprocess.run(["docker", "kill", container_id])
         subprocess.run(["docker", "rm", container_id])
-
-async def capture_ssh_session_line(process):
-    pattern = re.compile(r"ssh session: (ssh \S+@lon1.tmate.io)")
-    while True:
-        output = await process.stdout.readline()
-        if output == b'' and process.poll() is not None:
-            break
-        if output:
-            output = output.decode('utf-8').strip()
-            print(output)
-            match = pattern.search(output)
-            if match:
-                return match.group(1)
-    return None
 
 @bot.tree.command(name="deploy-ubuntu", description="Creates a new Instance with Ubuntu 22.04")
 async def deploy_ubuntu(interaction: discord.Interaction):
@@ -301,11 +306,9 @@ async def remove_server(interaction: discord.Interaction, container_name: str):
         return
 
     try:
-        # Stop and remove the Docker container
         subprocess.run(["docker", "stop", container_id], check=True)
         subprocess.run(["docker", "rm", container_id], check=True)
         
-        # Remove entry from the database
         remove_from_database(container_id)
         
         await interaction.response.send_message(embed=discord.Embed(description=f"Instance '{container_name}' removed successfully.", color=0x00ff00))
