@@ -86,9 +86,20 @@ async def on_ready():
     print(f'Bot is ready. Logged in as {bot.user}')
     await bot.tree.sync()
 
-@tasks.loop(minutes=1)
+@tasks.loop(seconds=5)
 async def change_status():
-    await bot.change_presence(activity=discord.Game(name="with Cloud Instances"))
+    try:
+        if os.path.exists(database_file):
+            with open(database_file, 'r') as f:
+                lines = f.readlines()
+                instance_count = len(lines)
+        else:
+            instance_count = 0
+
+        status = f"with {instance_count} Cloud Instances"
+        await bot.change_presence(activity=discord.Game(name=status))
+    except Exception as e:
+        print(f"Failed to update status: {e}")
 
 async def regen_ssh_command(interaction: discord.Interaction, container_name: str):
     user = str(interaction.user)
