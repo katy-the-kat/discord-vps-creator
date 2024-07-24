@@ -405,6 +405,8 @@ async def help_command(interaction: discord.Interaction):
     embed.add_field(name="/restart <ssh_command/Name>", value="Stop a server.", inline=False)
     embed.add_field(name="/list", value="List all your servers", inline=False)
     embed.add_field(name="/ping", value="Check the bot's latency.", inline=False)
+    embed.add_field(name="/port-http", value="Forward a http website.", inline=False)
+    embed.add_field(name="/port-add", value="Forward a port.", inline=False)
     await interaction.response.send_message(embed=embed)
 
 bot.run(TOKEN)
