@@ -1,3 +1,4 @@
+import random # This is random bullshit
 import logging
 import subprocess
 import sys
@@ -22,6 +23,10 @@ intents.message_content = False
 
 bot = commands.Bot(command_prefix='/', intents=intents)
 client = docker.from_env()
+
+# port gen forward module < i forgot this shit in the start
+def generate_random_port(): 
+    return random.randint(1025, 65535)
 
 def add_to_database(user, container_name, ssh_command):
     with open(database_file, 'a') as f:
