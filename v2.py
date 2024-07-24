@@ -172,6 +172,68 @@ def get_container_id_from_database(user, container_name):
                 return line.split('|')[1]
     return None
 
+async def execute_command(command):
+    process = await asyncio.create_subprocess_shell(
+        command,
+        stdout=asyncio.subprocess.PIPE,
+        stderr=asyncio.subprocess.PIPE
+    )
+    stdout, stderr = await process.communicate()
+    return stdout.decode(), stderr.decode()
+
+PUBLIC_IP = '138.68.79.95'
+
+async def capture_output(process, keyword):
+    while True:
+        output = await process.stdout.readline()
+        if not output:
+            break
+        output = output.decode('utf-8').strip()
+        if keyword in output:
+            return output
+    return None
+
+@bot.tree.command(name="port-add", description="Adds a port forwarding rule")
+@app_commands.describe(container_name="The name of the container", container_port="The port in the container")
+async def port_add(interaction: discord.Interaction, container_name: str, container_port: int):
+    await interaction.response.send_message(embed=discord.Embed(description="Setting up port forwarding. This might take a moment...", color=0x00ff00))
+
+    public_port = generate_random_port()
+
+    # Set up port forwarding inside the container
+    command = f"ssh -o StrictHostKeyChecking=no -R {public_port}:localhost:{container_port} serveo.net -N -f"
+
+    try:
+        # Run the command in the background using Docker exec
+        await asyncio.create_subprocess_exec(
+            "docker", "exec", container_name, "bash", "-c", command,
+            stdout=asyncio.subprocess.DEVNULL,  # No need to capture output
+            stderr=asyncio.subprocess.DEVNULL  # No need to capture errors
+        )
+
+        # Respond immediately with the port and public IP
+        await interaction.followup.send(embed=discord.Embed(description=f"Port added successfully. Your service is hosted on {PUBLIC_IP}:{public_port}.", color=0x00ff00))
+
+    except Exception as e:
+        await interaction.followup.send(embed=discord.Embed(description=f"An unexpected error occurred: {e}", color=0xff0000))
+
+@bot.tree.command(name="port-http", description="Forward HTTP traffic to your container")
+@app_commands.describe(container_name="The name of your container", container_port="The port inside the container to forward")
+async def port_forward_website(interaction: discord.Interaction, container_name: str, container_port: int):
+    try:
+        exec_cmd = await asyncio.create_subprocess_exec(
+            "docker", "exec", container_name, "ssh", "-o StrictHostKeyChecking=no", "-R", f"80:localhost:{container_port}", "serveo.net",
+            stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE
+        )
+        url_line = await capture_output(exec_cmd, "Forwarding HTTP traffic from")
+        if url_line:
+            url = url_line.split(" ")[-1]
+            await interaction.response.send_message(embed=discord.Embed(description=f"Website forwarded successfully. Your website is accessible at {url}.", color=0x00ff00))
+        else:
+            await interaction.response.send_message(embed=discord.Embed(description="Failed to capture forwarding URL.", color=0xff0000))
+    except subprocess.CalledProcessError as e:
+        await interaction.response.send_message(embed=discord.Embed(description=f"Error executing website forwarding: {e}", color=0xff0000))
+
 async def create_server_task(interaction):
     await interaction.response.send_message(embed=discord.Embed(description="Creating Instance, This takes a few seconds.", color=0x00ff00))
     user = str(interaction.user)
