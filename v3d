@@ -13,7 +13,7 @@ import asyncio
 from discord import app_commands
 
 TOKEN = '' # TOKEN HERE
-SERVER_LIMIT = 12000000
+SERVER_LIMIT = 1
 database_file = 'database.txt'
 
 intents = discord.Intents.default()
@@ -88,15 +88,12 @@ async def on_ready():
 @tasks.loop(seconds=5)
 async def change_status():
     try:
+        instance_count = 0
         if os.path.exists(database_file):
             with open(database_file, 'r') as f:
-                lines = f.readlines()
-                instance_count = len(lines)
-        else:
-            instance_count = 0
-
-          status = f"with {instance_count} Servers"
-          await bot.change_presence(activity=discord.Game(name=status))
+                instance_count = len(f.readlines())
+        status = f"with {instance_count} VDSes"
+        await bot.change_presence(activity=discord.Game(name=status))
     except Exception as e:
         print(f"Failed to update status: {e}")
 
@@ -283,8 +280,8 @@ async def list_servers(interaction: discord.Interaction):
     if servers:
         embed = discord.Embed(title="Your Instances", color=0x00ff00)
         for server in servers:
-            _, container_name, _ = server.split('|')
-          embed.add_field(name=container_name, value="6GB RAM - 2cores", inline=False)
+          _, container_name, _ = server.split('|')
+          embed.add_field(name=container_name, value="6GB RAM - 2core", inline=False)
         await interaction.response.send_message(embed=embed)
     else:
         await interaction.response.send_message(embed=discord.Embed(description="You have no servers.", color=0xff0000))
