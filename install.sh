@@ -40,7 +40,7 @@ wget -O main.py https://raw.githubusercontent.com/katy-the-kat/discord-vps-creat
 echo Downloaded successfully
 echo "Installing Python packages: discord and docker..."
 pip3 install discord docker
-echo "Please enter your Discord bot token:"
+echo "Please enter your Discord bot token, Make a bot at discord.dev and get the token, You dont need any intents:"
 read -r DISCORD_TOKEN
 echo "Updating main.py with the provided Discord token..."
 sed -i "s/TOKEN = ''/TOKEN = '$DISCORD_TOKEN'/" main.py
