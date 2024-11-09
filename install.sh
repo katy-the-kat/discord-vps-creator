@@ -1,18 +1,25 @@
 #!/bin/bash
 
-echo    /$$$ /$$      /$$ /$$   /$$ /$$$$$$$$ /$$    /$$ /$$   /$$ /$$$  
-echo   /$$_/| $$$    /$$$| $$  /$$/| $$_____/| $$   | $$| $$  | $$|_  $$ 
-echo  /$$/  | $$$$  /$$$$| $$ /$$/ | $$      | $$   | $$| $$  | $$  \  $$
-echo | $$   | $$ $$/$$ $$| $$$$$/  | $$$$$   |  $$ / $$/| $$$$$$$$   | $$
-echo | $$   | $$  $$$| $$| $$  $$  | $$__/    \  $$ $$/ | $$__  $$   | $$
-echo |  $$  | $$\  $ | $$| $$\  $$ | $$        \  $$$/  | $$  | $$   /$$/
-echo  \  $$$| $$ \/  | $$| $$ \  $$| $$         \  $/   | $$  | $$ /$$$/ 
-echo   \___/|__/     |__/|__/  \__/|__/          \_/    |__/  |__/|___/  
-echo Make your own Free VPS Hosting (Dont Allow Mining)
+echo " ██ ███    ███ ██    ██  ██████  ███████ ██    ██ ██   ██ ██  
+██  ████  ████  ██  ██  ██    ██ ██      ██    ██ ██   ██  ██ 
+██  ██ ████ ██   ████   ██    ██ █████   ██    ██ ███████  ██ 
+██  ██  ██  ██    ██    ██    ██ ██       ██  ██  ██   ██  ██ 
+ ██ ██      ██    ██     ██████  ██        ████   ██   ██ ██ "
+
+echo Make your own Free VPS Hosting, Dont Allow Mining
+
+read -p "Are you sure you want to proceed? Agree to not allow mining (y/n): " -n 1 -r
+echo
+
+if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+    echo "Installation aborted."
+    exit 1
+fi
 
 echo "Installing python3-pip and docker."
 sudo apt update
 sudo apt install -y python3-pip docker.io
+echo Installed successfully
 
 echo "Writing Dockerfile..."
 cat <<EOF > Dockerfile
@@ -22,10 +29,13 @@ RUN apt update
 RUN apt install -y tmate
 EOF
 
+echo Made successfully - Building Docker image.
 echo "Building Docker Image"
 sudo docker build -t ubuntu-22.04-with-tmate .
+echo Built successfully
 echo "Downloading main.py from the GitHub repository..."
 wget -O main.py https://raw.githubusercontent.com/katy-the-kat/discord-vps-creator/refs/heads/main/v3ds
+echo Downloaded successfully
 echo "Installing Python packages: discord and docker..."
 pip3 install discord docker
 echo "Please enter your Discord bot token:"
