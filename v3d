@@ -214,7 +214,7 @@ async def create_server_task(interaction):
     
     try:
         container_id = subprocess.check_output([
-            "docker", "run", "--cpus 1", "--memory 6G", "-itd", image
+            "docker", "run", "-itd", image
         ]).strip().decode('utf-8')
     except subprocess.CalledProcessError as e:
       await interaction.followup.send(embed=discord.Embed(description=f"Something went wrong. Please report this to the .gg/qemu staff.", color=0xff0000))
