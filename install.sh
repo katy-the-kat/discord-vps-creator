@@ -16,6 +16,8 @@ if [[ ! $REPLY =~ ^[Yy]$ ]]; then
     exit 1
 fi
 
+cd ~
+
 echo "Installing python3-pip and docker."
 sudo apt update
 sudo apt install -y python3-pip docker.io
