@@ -23,10 +23,6 @@ intents.message_content = False
 bot = commands.Bot(command_prefix='/', intents=intents)
 client = docker.from_env()
 
-# port gen forward module < i forgot this shit in the start
-def generate_random_port(): 
-    return random.randint(1025, 65535)
-
 def add_to_database(user, container_name, ssh_command):
     with open(database_file, 'a') as f:
         f.write(f"{user}|{container_name}|{ssh_command}\n")
@@ -92,7 +88,7 @@ async def change_status():
         if os.path.exists(database_file):
             with open(database_file, 'r') as f:
                 instance_count = len(f.readlines())
-        status = f"with {instance_count} VDSes"
+        status = f"with {instance_count} Instances"
         await bot.change_presence(activity=discord.Game(name=status))
     except Exception as e:
         print(f"Failed to update status: {e}")
@@ -204,10 +200,10 @@ async def capture_output(process, keyword):
     return None
 
 async def create_server_task(interaction):
-    await interaction.response.send_message(embed=discord.Embed(description="## Creating VDS.", color=0x00ff00))
+    await interaction.response.send_message(embed=discord.Embed(description="## Creating VPS, This might take a few seconds.", color=0x00ff00))
     user = str(interaction.user)
     if count_user_servers(user) >= SERVER_LIMIT:
-        await interaction.followup.send(embed=discord.Embed(description="```Error: Instance Limit-reached```", color=0xff0000))
+        await interaction.followup.send(embed=discord.Embed(description="```Error: VPS Limit-reached```", color=0xff0000))
         return
 
     image = "ubuntu-22.04-with-tmate"
